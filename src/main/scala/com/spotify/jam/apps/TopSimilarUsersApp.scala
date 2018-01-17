@@ -107,62 +107,48 @@ object TopSimilarUsersApp {
           lambdaNewCombiner, // New Combiner
           lambdaMerger, // Merger
           lambdaMergeCombiners // Combiner
-      )
+      ).cache() // to avoid recomputation of userTrackVector during the cartesian product
       
       /*
        * Computing cosine similarity of the 'track vectors' of each pair of <user1,user2>
        * The most similar pair of <user1,user2> will be those with the highest cosine similarity value
        * 
-       * We use cartesian product to generate all the permutations of users. Thus, this is inneficient 'cuz
-       * The map applied after the cartesian product filterswe compute the similarity of (user1, user2) and (user2, user1). 
+       * - We use cartesian product to generate all the permutations of users. Thus, this is inneficient 'cuz
+       * - The filter applied after the cartesian product filters out the bottom half of the matrix
+       * - we compute the similarity of (user1, user2) and (user2, user1). 
        * 
        * cos_sim(u1,u2) = dot_product(v1, v2)    
-       */
-      val completeCount = userTrackVector.cartesian(userTrackVector).count()
+       */      
+      val lambdaCosineSim = (vec1:HashMap[Tuple2[String, String], Int], vec2:HashMap[Tuple2[String, String], Int]) => {
+        0
+      }
       
-      val halfMatrix = userTrackVector.cartesian(userTrackVector) // cartesian product
-        .map({
+      val topN = userTrackVector.cartesian(userTrackVector) // cartesian product
+        .filter({ // filters out the bottom half of the matrix
           case (user_v1, user_v2) => {
-            val user1 = user_v1._1
-            val user2 = user_v2._1
-            if (user1 < user2)
-              // ((user1, user2), (vector1, vector2))
-              ((user1, user2) -> (user_v1._2, user_v2._2))
+            // user_id1 < user_id2
+            if (user_v1._1 < user_v2._1)
+              true
             else
-              (("","") -> null)
+              false
           }
-        }) // this map 
-        .count()
-        
-      printErr(s"completeCount: $completeCount, halfMatrix: $halfMatrix")      
-      
-//      /*
-//       * Joining jamArtist + jamLikesCount to get <jam_id, artist, #likes>
-//       * We do it by performing a natural join since we don't care for those
-//       * jams that don't have likes
-//       */
-//      // PairRDD[jam_id, [artist, #likes]]
-//      val jamArtistLikes = jamArtist.join(jamLikesCount)
-//      
-//      /*
-//       * Computing top <artist, #likes>
-//       */
-//      // performing likes count per artist <artist, #likes> from PairRDD[jam_id, [artist, #likes]]
-//      val artistLikes = jamArtistLikes.map({ 
-//        // creating RDD <artist, #likes>
-//        case (jam_id, artist_likes) => (artist_likes._1 -> artist_likes._2)
-//      }).reduceByKey((v1, v2) => v1 + v2) 
-//      
-//      val topN = artistLikes.map({ case (artist, n_likes) => (n_likes, artist)}) // flips
-//        .top(NUM_ART) // pick top N
-//        .map({ case (v, k) => s"$k, $v"}).mkString("\n") // creates string of results
-//        
-//      // create the output file
-//      val pw = new PrintWriter(new File(output + "/topArtists.csv"))
-//      pw.write("Artist, #Likes\n")
-//      pw.write(topN)
-//      pw.close()
-//      printMsg("Artist, #Likes\n" + topN)
+        }) 
+        .map({ // computes the cosine similarity between peair of users
+          case (user_v1, user_v2) => {
+            // pairRDD <sim, (user_id1, user_id2)>
+            (lambdaCosineSim(user_v1._2, user_v2._2), // computes cosine similarity and uses it as key 
+              (user_v1._1, user_v2._1))
+          }    
+        })
+        .top(NUM_USERS) // pick top N
+        .map({ case (v, k) => s"$k, $v"}).mkString("\n") // creates string of results
+              
+      // create the output file
+      val pw = new PrintWriter(new File(output + "/topSimUsers.csv"))
+      pw.write("(user_id1 : user_id2), Cosine similarity\n")
+      pw.write(topN)
+      pw.close()
+      printMsg("(user_id1 : user_id2), Cosine similarity\n" + topN)
       
     }
 
