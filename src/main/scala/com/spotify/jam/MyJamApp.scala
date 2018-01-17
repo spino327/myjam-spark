@@ -28,8 +28,10 @@ object MyJamApp {
     repl.installOption("basic" -> BasicApp.makeApp(output, sc))
     // adding top jams
     repl.installOption("top_jams" -> TopJamsApp.makeApp(output, sc))
-    // adding top jams
+    // adding top artists
     repl.installOption("top_arts" -> TopArtistsApp.makeApp(output, sc))
+    // adding top similar users
+    repl.installOption("top_sim" -> TopSimilarUsersApp.makeApp(output, sc))
   }
 
   def main (args: Array[String]) {
@@ -58,48 +60,6 @@ object MyJamApp {
     
     // starting repl
     repl.loop(inputJams, inputLikes, inputFollowers)
-    
-    System.exit(-1)
-    
-    // Load jams data
-    val rawJams =  sc.textFile(inputJams, numPartitions)
-
-    val totalLines = rawJams.count()
-
-    val jamsMap = rawJams.map(line => {
-
-        var jamData:Array[String] = Preprocessor.parseJam(line)
-        
-        // we required at least jam_id, user_id, artist, title
-        if (jamData.length >= 4)
-          ((jamData(2).toLowerCase() -> jamData(3).toLowerCase()), 1)
-        else
-          (("" -> ""), 1)
-    })
-
-    val jamsCount = jamsMap.reduceByKey((v1, v2) => v1 + v2)
-    var init = System.nanoTime()
-    val top5_1 = jamsCount.map({ case (k, v) => (v, k)}).groupByKey().sortByKey().top(15)
-    println(top5_1.mkString("\n"))
-    val ex1 = System.nanoTime() - init
-
-    init = System.nanoTime()
-    val top5_2 = jamsCount.map({ case (k, v) => (v, k)}).groupByKey().top(15)
-    println(top5_2.mkString("\n"))
-    val ex2 = System.nanoTime() - init
-    println("execution time ex1: " + ex1/1.0e9 + ", exp2: " + ex2/1.0e9)
-    // top5.saveAsTextFile(outputFolder)
-    println(s"totalLines: $totalLines")
-    // println(s"totalLines: $totalLines, min_split: " + sizeSplit.min() + ", max_split: " + sizeSplit.max())
-
-    
-
-    // load likes
-    val rawLikes = sc.textFile(inputLikes, numPartitions)
-
-    // val likesMap = rawLikes.map(line => {
-    //   val 
-    // })
   }
 }
 

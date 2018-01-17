@@ -27,7 +27,7 @@ object TopJamsApp {
           5
       }
       
-      ReplHelper.printMsg(s"Computing Top$NUM_JAMS jams" )
+      printMsg(s"Computing Top$NUM_JAMS jams" )
       
       // Load jams data
       val rawJams =  sc.textFile(fileJams)
@@ -36,11 +36,12 @@ object TopJamsApp {
       val jamsMap = rawJams.map(line => {
 
         // parse jam
-        val jamData:Array[String] = Preprocessor.parseJam(line)
+        // lower case to clean up data
+        val jamData:Array[String] = Preprocessor.parseJam(line.toLowerCase())
 
         // we required at least jam_id, user_id, artist, title
         if (jamData.length >= 4)
-          ((jamData(2).toLowerCase() -> jamData(3).toLowerCase()), 1)
+          ((jamData(2) -> jamData(3)), 1)
         else
           (("" -> ""), 1)
       })
@@ -59,7 +60,7 @@ object TopJamsApp {
       pw.write("Artist, Title, Count\n")
       pw.write(topN)
       pw.close()
-      println("Artist, Title, Count\n" + topN)
+      printMsg("Artist, Title, Count\n" + topN)
       
     }
 

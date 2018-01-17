@@ -27,7 +27,7 @@ object TopArtistsApp {
           5
       }
       
-      ReplHelper.printMsg(s"Computing Top$NUM_ART artists" )
+      printMsg(s"Computing Top$NUM_ART artists" )
       
       /*
        * Computing LikesCount <jam_id, #likes> from Likes file
@@ -39,7 +39,9 @@ object TopArtistsApp {
       val jamLikesCount = rawLikes.map(line => {
 
         // parse Like
-        val likeData:Array[String] = Preprocessor.parseLike(line)
+        // lower case to clean up data
+        // Assuming user_id and jam_id are case-insensitive
+        val likeData:Array[String] = Preprocessor.parseLike(line.toLowerCase())
 
         // we required at least (user_id, jam_id)
         if (likeData.length >= 2)
@@ -58,7 +60,9 @@ object TopArtistsApp {
       val jamArtist = rawJams.map(line => {
 
         // parse jam
-        val jamData:Array[String] = Preprocessor.parseJam(line)
+        // lower case to clean up data
+        // Assuming jam_id is case-insensitive
+        val jamData:Array[String] = Preprocessor.parseJam(line.toLowerCase())
 
         // we required at least jam_id, user_id, artist
         if (jamData.length >= 3)
@@ -94,7 +98,7 @@ object TopArtistsApp {
       pw.write("Artist, #Likes\n")
       pw.write(topN)
       pw.close()
-      println("Artist, #Likes\n" + topN)
+      printMsg("Artist, #Likes\n" + topN)
       
     }
 
