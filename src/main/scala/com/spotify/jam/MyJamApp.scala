@@ -3,14 +3,14 @@ package com.spotify.jam
 import com.spotify.jam.input._
 import com.spotify.jam.apps._
 
-import java.io.File
+import java.io._
 
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 
 import scala.sys
 import scala.io.StdIn
-import Console.{GREEN, RED, RESET, YELLOW_B, UNDERLINED}
+//import Console.{GREEN, RED, RESET, YELLOW_B, UNDERLINED}
 
 /*
  *
@@ -23,18 +23,12 @@ object MyJamApp {
   /**
    * Installing REPL applications
    */
-  def installingApps(output:String):Unit = {
-    // // adding saving songs data app
-    // repl.installOption("save_data" -> new ReplApp((x) => {
-    //   println("Saving songs data...")
-    //   x.saveAsTextFile(output + "/songs_data")
-    // }, "Saving songs data."))
-    
+  def installingApps(output:String, sc:SparkContext):Unit = {    
     // adding basic
-    repl.installOption("basic" -> BasicApp.makeApp(output))
+    repl.installOption("basic" -> BasicApp.makeApp(output, sc))
 
     // adding top jams
-    repl.installOption("top_jams" -> TopJamsApp.makeApp(output))
+    repl.installOption("top_jams" -> TopJamsApp.makeApp(output, sc))
   }
 
   def main (args: Array[String]) {
@@ -50,13 +44,21 @@ object MyJamApp {
     val inputFollowers = args(2)
     val outputFolder = args(3)
     val numPartitions = args(4).toInt
-  
-    // installing apps
-    installingApps(outputFolder)
 
+    // create folder
+    new File(outputFolder).mkdir()
+    
     // Create a Scala Spark Context.
     val conf = new SparkConf().setAppName("ThisIsMyJam Spark") 
     val sc = new SparkContext(conf)
+    
+    // installing apps
+    installingApps(outputFolder, sc)
+    
+    // starting repl
+    repl.loop(inputJams, inputLikes, inputFollowers)
+    
+    System.exit(-1)
     
     // Load jams data
     val rawJams =  sc.textFile(inputJams, numPartitions)
@@ -64,11 +66,12 @@ object MyJamApp {
     val totalLines = rawJams.count()
 
     val jamsMap = rawJams.map(line => {
-        val jamData:Array[String] = Preprocessor.parseJam(line)
+
+        var jamData:Array[String] = Preprocessor.parseJam(line)
         
         // we required at least jam_id, user_id, artist, title
         if (jamData.length >= 4)
-          ((jamData(2) -> jamData(3)), 1)
+          ((jamData(2).toLowerCase() -> jamData(3).toLowerCase()), 1)
         else
           (("" -> ""), 1)
     })
@@ -87,11 +90,15 @@ object MyJamApp {
     // top5.saveAsTextFile(outputFolder)
     println(s"totalLines: $totalLines")
     // println(s"totalLines: $totalLines, min_split: " + sizeSplit.min() + ", max_split: " + sizeSplit.max())
+
     
 
-    // starting repl
-    // repl.loop(pairSongDataRDD)
+    // load likes
+    val rawLikes = sc.textFile(inputLikes, numPartitions)
 
+    // val likesMap = rawLikes.map(line => {
+    //   val 
+    // })
   }
 }
 
