@@ -120,7 +120,23 @@ object TopSimilarUsersApp {
        * cos_sim(u1,u2) = dot_product(v1, v2)    
        */      
       val lambdaCosineSim = (vec1:HashMap[Tuple2[String, String], Int], vec2:HashMap[Tuple2[String, String], Int]) => {
-        0
+        // getting the common keys
+        val keys = HashSet[Tuple2[String, String]]()
+        keys ++ vec1.keySet
+        keys ++ vec2.keySet
+        
+        // computing dot product
+        val dotProduct = keys.map(art_tit => {
+          // multiply #reproduction of art_tit for both users
+          val e1 = { 
+            if (vec1.contains(art_tit)) vec1(art_tit) else 0
+          }
+          val e2 = { 
+            if (vec2.contains(art_tit)) vec2(art_tit) else 0
+          }
+          e1 * e2
+        }).reduce((prod1, prod2) => prod1 + prod2) // sum
+        
       }
       
       val topN = userTrackVector.cartesian(userTrackVector) // cartesian product
