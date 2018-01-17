@@ -26,9 +26,10 @@ object MyJamApp {
   def installingApps(output:String, sc:SparkContext):Unit = {    
     // adding basic
     repl.installOption("basic" -> BasicApp.makeApp(output, sc))
-
     // adding top jams
     repl.installOption("top_jams" -> TopJamsApp.makeApp(output, sc))
+    // adding top jams
+    repl.installOption("top_arts" -> TopArtistsApp.makeApp(output, sc))
   }
 
   def main (args: Array[String]) {
