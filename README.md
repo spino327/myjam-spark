@@ -48,6 +48,8 @@ In general, I assumed that the data (jams, likes, followers) were case-insensiti
 
 Since I used the cartesian product this operation takes a lot of time and memory. 
 
+**Disclaimer:** I couldn't get a solution (output file) for the top 5 most similar users, unfortunately my computer couldn't handle the size of the cartesian product.
+
 ## Results
 
 You can find the results in CSV format located at the folder 'answers':  
