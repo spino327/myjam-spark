@@ -62,7 +62,7 @@ object TopSimilarUsersApp {
         else
           ("" -> (""->""))
       })
-      
+            
       // creating pairRDD <user_id, Map of tracks>
       val lambdaNewCombiner = (artist_title:Tuple2[String, String]) => { 
         HashMap[Tuple2[String, String], Int] ((artist_title -> 1))
@@ -109,7 +109,7 @@ object TopSimilarUsersApp {
           lambdaMergeCombiners // Combiner
       ).cache() // to avoid recomputation of userTrackVector during the cartesian product
       println(userTrackVector.take(1))
-      
+
       /**
        * Computing the unique users
        */
@@ -128,9 +128,9 @@ object TopSimilarUsersApp {
        */      
       val lambdaCosineSim = (vec1:HashMap[Tuple2[String, String], Int], vec2:HashMap[Tuple2[String, String], Int]) => {
         // getting the common keys
-        val keys = HashSet[Tuple2[String, String]]()
-        keys ++ vec1.keySet
-        keys ++ vec2.keySet
+        val keys = scala.collection.mutable.HashSet[Tuple2[String, String]]()
+        keys ++= vec1.keySet
+        keys ++= vec2.keySet
         
         // computing dot product
         var sim = 0
@@ -167,13 +167,13 @@ object TopSimilarUsersApp {
               false
           }
         })
-      
+                    
       val topN = usersPair.join(userTrackVector) // (u1, (u2, v1))
         .map({ // flips user u2 as key
           case (k, v) => (v._1, (k, v._2)) // (u2, (u1, v1))
         }) 
         .join(userTrackVector) // (u2, ((u1, v1), v2)) Now we got all the 2 user vectors
-        .map({ // computes the cosine similarity between peair of users
+        .map({ // computes the cosine similarity between pair of users
           case (u2, value) => {
             val u1 = value._1._1
             val v1 = value._1._2
@@ -184,9 +184,8 @@ object TopSimilarUsersApp {
           }      
         })
         .top(NUM_USERS) // pick top N
-        .map({ case (v, k) => s"$k, $v"}).mkString("\n") // creates string of results
+        .map({ case (v, k) => k._1 + "," + k._2 + "," + v}).mkString("\n") // creates string of results
            
-//        .map({ case (v, k) => s"$k, $v"}).mkString("\n") // creates string of results
 //      val topN = userTrackVector.cartesian(userTrackVector) // cartesian product
 //        .filter({ // filters out the bottom half of the matrix
 //          case (user_v1, user_v2) => {
@@ -208,13 +207,14 @@ object TopSimilarUsersApp {
 //        })
 //        .top(NUM_USERS) // pick top N
 //        .map({ case (v, k) => s"$k, $v"}).mkString("\n") // creates string of results
-              
+//      topN.saveAsTextFile(output + "/sim")
+       
       // create the output file
       val pw = new PrintWriter(new File(output + "/topSimUsers.csv"))
-      pw.write("(user_id1 : user_id2), Cosine similarity\n")
+      pw.write("user_id1, user_id2, Cosine similarity\n")
       pw.write(topN)
       pw.close()
-      printMsg("(user_id1 : user_id2), Cosine similarity\n" + topN)
+      printMsg("user_id1, user_id2, Cosine similarity\n" + topN)
       
     }
 
