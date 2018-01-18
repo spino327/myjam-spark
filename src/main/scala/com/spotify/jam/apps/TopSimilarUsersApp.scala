@@ -88,10 +88,10 @@ object TopSimilarUsersApp {
           vector.foreach({ 
             case (k, v) => {
               val current:Int = {
-            		  if (newVect.contains(k))
-            			  newVect(k)
-            			else
-            			  0
+                if (newVect.contains(k))
+                  newVect(k)
+                else
+                  0
               }
               newVect += (k -> (current + v)) 
             }
@@ -175,12 +175,12 @@ object TopSimilarUsersApp {
         .join(userTrackVector) // (u2, ((u1, v1), v2)) Now we got all the 2 user vectors
         .map({ // computes the cosine similarity between peair of users
           case (u2, value) => {
-            	val u1 = value._1._1
-        			val v1 = value._1._2
-        			val v2 = value._2
-        			// pairRDD <sim, (user_id1, user_id2)>
-        			(lambdaCosineSim(v1, v2), // computes cosine similarity and uses it as key 
-        					(u1, u2))
+            val u1 = value._1._1
+            val v1 = value._1._2
+            val v2 = value._2
+            // pairRDD <sim, (user_id1, user_id2)>
+            (lambdaCosineSim(v1, v2), // computes cosine similarity and uses it as key 
+              (u1, u2))
           }      
         })
         .top(NUM_USERS) // pick top N
