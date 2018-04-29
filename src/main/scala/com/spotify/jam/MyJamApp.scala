@@ -32,6 +32,7 @@ object MyJamApp {
     repl.installOption("top_arts" -> TopArtistsApp.makeApp(output, sc))
     // adding top similar users
     repl.installOption("top_sim" -> TopSimilarUsersApp.makeApp(output, sc))
+    
   }
 
   def main (args: Array[String]) {
