@@ -1,6 +1,6 @@
-# Spotify Data take-home challenge: www.thisismyjam.com
+# Processing www.thisismyjam.com
 
-Spark-based project to solve the challenge
+Spark-based project to work with the thisismyjam.
 
 ## Requirements
 - maven 3.5  
